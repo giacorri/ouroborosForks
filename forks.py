@@ -127,10 +127,8 @@ class Fork:
         return maximal_tines
     
     def print(self):
-        print("[")
-        for tine in self.get_tines():
-            print(f"\t{tine}")
-        print("]")
+        print(self.get_tines())
+
     
     def plot(self, quick=False):
         plot_tree(self.tree, self.w, quick)

@@ -16,14 +16,15 @@ if __name__ == "__main__":
             [0, 1, 0, 1, 0, 1],
             [0, 1, 0, 1, 0, 1, 1],
             [0, 1, 0, 1, 0, 1, 1, 1],
-            [0, 1, 0, 1, 0, 1, 1, 1, 0]
+            [0, 1, 0, 1, 0, 1, 1, 1, 0],
+            [0, 1, 0, 1, 0, 1, 1, 1, 0, 0],
+            [0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 1]
     ]
 
     times1 = []
     nForks1 = []
     # normal generation (1 core)
     for w in W:
-
         t = time.time()    
         forks = gen_forks(w)
         times1.append(time.time() - t)
@@ -46,7 +47,7 @@ if __name__ == "__main__":
                 forks[i].print()
                 forks[i].plot(quick=True)
 
-    with open("test_generation_1.txt", "w") as f:
+    with open("result_generation_1.txt", "w") as f:
         f.write("GENERATION TEST: 1 maximum adversarial block per slot\n")
         for i in range(len(W)):
             f.write("- w = " + str(W[i]) + "\n")

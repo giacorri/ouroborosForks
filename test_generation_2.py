@@ -13,8 +13,7 @@ if __name__ == "__main__":
     W = [
             [0, 1, 0, 1],
             [0, 1, 0, 1, 0],
-            [0, 1, 0, 1, 0, 1],
-            [0, 1, 0, 1, 0, 1, 1]
+            [0, 1, 0, 1, 0, 1]
     ]
 
     times = []
@@ -31,7 +30,7 @@ if __name__ == "__main__":
                 forks[i].print()
                 forks[i].plot(quick=True)
 
-    with open("test_generation_2.txt", "w") as f:
+    with open("result_generation_2.txt", "w") as f:
         f.write("GENERATION TEST: 2 maximum adversarial block per slot\n")
         for i in range(len(W)):
             f.write("- w = " + str(W[i]) + "\n")
