@@ -29,7 +29,7 @@ if __name__ == "__main__":
             for i in range(15):
                 forks[i].print()
                 forks[i].plot(quick=True)
-
+    print(f"Writing results in result_generation_2.txt")
     with open("result_generation_2.txt", "w") as f:
         f.write("GENERATION TEST: 2 maximum adversarial block per slot\n")
         for i in range(len(W)):

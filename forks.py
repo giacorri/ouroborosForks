@@ -357,34 +357,3 @@ def parallel_gen_forks(w, maxAdversarialBlocks=1, num_processes=NUM_PROCESSES):
     print(f"\033[0m", end="")
     return generatedForks
 
-
-if __name__ == '__main__':
-    multiprocessing.freeze_support()
-
-    # wPaper = [0, 1, 0, 1]
-    wPaper = [0, 1, 0, 1, 0, 1]
-    # wPaper = [0, 1, 0, 1, 0, 0, 1, 1]
-    # wPaper = [0, 1, 0, 1, 0, 0, 1, 1, 0]
-
-    import time
-
-    # normalStart = time.time()
-    # normalForks = gen_forks(wPaper)
-    # normalEnd = time.time()
-    # normalTime = round(normalEnd-normalStart, 2)
-    
-
-    parallelStart = time.time()
-    parallelForks = parallel_gen_forks(wPaper, 2)
-    parallelEnd = time.time()
-    parallelTime = round(parallelEnd-parallelStart, 2)
-    # print(f"NORMAL: generated {len(normalForks)} from {wPaper} in {normalTime} seconds")
-    print(f"PARALLEL: generated {len(parallelForks)} from {wPaper} in {parallelTime} seconds")
-
-    import random
-
-    for i in range(10):
-        n = random.randint(0, len(parallelForks)-1)
-        print(f"fork {n+1}")
-        parallelForks[n].print()
-        parallelForks[n].plot()
