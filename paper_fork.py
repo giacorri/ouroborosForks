@@ -27,8 +27,8 @@ PAPER_FORK.tree.add_node("5", weight=5, type="honest", n=0)
 PAPER_FORK.tree.add_edge("4 a2", "5")
 
 if __name__ == "__main__":
-    # PAPER_FORK.print()
-    # PAPER_FORK.plot()
+    PAPER_FORK.print()
+    PAPER_FORK.plot()
     print(f"Is tine 0 viable? {PAPER_FORK.is_viable(0)}")
     print(f"Is tine 1 viable? {PAPER_FORK.is_viable(1)}")
     print(f"Is tine 2 viable? {PAPER_FORK.is_viable(2)}")

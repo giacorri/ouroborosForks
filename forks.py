@@ -85,14 +85,26 @@ def plot_tree(tree, w, quick=False):
         plt.show()
 
 # TINE, a list of nodes in a path of the graph
-def convert_tine(tine):
-    return [int(node.split(" ")[0]) for node in tine]
+# def convert_tine(tine):
+#     return [int(node.split(" ")[0]) for node in tine]
+def truncate_tine(tine, k):
+    if len(tine) < k:
+        return []
+    return tine[:len(tine)-k]
+
+def is_prefix(tine1, tine2):
+    if len(tine1) > len(tine2):
+        return False
+    for i in range(len(tine1)):
+        if tine1[i] != tine2[i]:
+            return False
+    return True
 
 # FORK struct, composed by a tree graph and a characteristics string
 class Fork:
     def __init__(self, w, tree=ROOT):
-        self.tree = tree
-        self.w = w
+        self.tree = tree.copy()
+        self.w = w.copy()
 
     def get_w(self):
         return self.w
@@ -131,10 +143,8 @@ class Fork:
 
     def is_viable(self, nTine):
         tine = self.get_tines()[nTine]
-        print(f"\ttine: {tine}")
         lastNode = tine[-1]
         label = lastNode.split(" ")[0]
-        print(f"\tlabel: {label}")
         if label == '0':
             return True
         else:
@@ -145,6 +155,13 @@ class Fork:
                     return False
             return True
         
+    def get_viableTinesIndexes(self):
+        viableTinesIndexes = []
+        tines = self.get_tines()
+        for nTine in range(len(tines)):
+            if self.is_viable(nTine):
+                viableTinesIndexes.append(nTine)
+        return viableTinesIndexes
 
     def print(self):
         print(self.get_tines())
@@ -155,6 +172,42 @@ class Fork:
 
     def copy(self):
         return Fork(self.w.copy(), self.tree.copy())
+
+def convert_tines_to_fork(tines):
+    tree = ROOT.copy()
+    wDict = {}
+    maxSlot = 0
+    for tine in tines:
+        for i in range(1, len(tine)):
+            node = tine[i]
+            if node not in tree.nodes:
+                print(f"node {node} not in tree")
+                splittedNodeName = node.split(" ")
+                weight = int(splittedNodeName[0])
+                print(f"weight {weight}")
+                if weight > maxSlot:
+                    maxSlot = weight
+                if len(splittedNodeName) == 1:
+                    type = "honest"
+                    print(f"type {type}")
+                    wDict[weight] = 0
+                    n = 0
+                else:
+                    type = "adversarial"
+                    print(f"type {type}")
+                    wDict[weight] = 1
+                    n = int(splittedNodeName[1][1:])
+                    print(f"n {n}")    
+                tree.add_node(node, weight=weight, type=type, n=n)
+            # if the edge is not already in the tree
+            if not tree.has_edge(tine[i-1], tine[i]):
+                tree.add_edge(tine[i-1], tine[i])
+    w = [1] * (maxSlot)
+    for i in wDict:
+        w[i-1] = wDict[i]
+    print(f"w {w}")
+    return Fork(w, tree)
+
 
 def plot_forks(forks, quick=False):
     nForks = len(forks)
@@ -379,13 +432,36 @@ def parallel_gen_forks(w, maxAdversarialBlocks=1, num_processes=NUM_PROCESSES):
 
 # Characteristic string properties
 
-
-
-
-def kCP(w, parallel=True):
+def kCP(k, w, parallel=True):
     if parallel:
         forks = parallel_gen_forks(w)
     else:
         forks = gen_forks(w)
     for fork in forks:
-        viable
+        # print(f"fork: {fork.get_tines()}")
+        viableTinesIndexes = fork.get_viableTinesIndexes()
+        # print(f"\tviable tines indexes: {viableTinesIndexes}")
+        if len(viableTinesIndexes) > 1:
+            # print(f"\t\tpossible pairs of viable tines: { ((len(viableTinesIndexes) * (len(viableTinesIndexes) - 1)) / 2):.0f}") 
+            tines = fork.get_tines()
+            for i in range(len(viableTinesIndexes)):
+                if i == len(viableTinesIndexes) - 1:
+                    break
+                index1 = viableTinesIndexes[i]
+                tine1 = tines[index1]
+                
+                for j in range(i+1, len(viableTinesIndexes)):
+                    index2 = viableTinesIndexes[j]
+                    tine2 = tines[index2]
+                    l1 = int(tine1[-1].split(" ")[0])
+                    l2 = int(tine2[-1].split(" ")[0])
+                    t1 = tine1.copy()
+                    t2 = tine2.copy()
+                    if l1 > l2:
+                        t1, t2 = t2, t1
+                    # print(f"\t\t\t- t1: {t1}, t2: {t2}")
+                    # print(f"\t\t\t\tIs {truncate_tine(t1, k)} prefix of {t2}? {is_prefix(truncate_tine(t1, k), t2)}")
+                    if not is_prefix(truncate_tine(t1, k), t2):
+                        counterExample = [fork, t1, t2]
+                        return False, counterExample
+    return True, None

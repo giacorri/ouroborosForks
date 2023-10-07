@@ -1,4 +1,4 @@
 *.txt
-
+prova.py
 *.pyc
 __pycache__/*
