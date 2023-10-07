@@ -126,6 +126,26 @@ class Fork:
                 maximal_tines.append(tine)
         return maximal_tines
     
+    def depth(self, node):
+        return nx.shortest_path_length(self.tree, '0', node)
+
+    def is_viable(self, nTine):
+        tine = self.get_tines()[nTine]
+        print(f"\ttine: {tine}")
+        lastNode = tine[-1]
+        label = lastNode.split(" ")[0]
+        print(f"\tlabel: {label}")
+        if label == '0':
+            return True
+        else:
+            honestPriorSlots = [i+1 for i in range(int(label)) if self.w[i] == 0]
+            honestPiorNodes = [node for node in self.tree.nodes if self.tree.nodes[node]['weight'] in honestPriorSlots and self.tree.nodes[node]['type'] == 'honest']
+            for h in honestPiorNodes:
+                if self.depth(h) > self.depth(lastNode):
+                    return False
+            return True
+        
+
     def print(self):
         print(self.get_tines())
 
@@ -357,3 +377,15 @@ def parallel_gen_forks(w, maxAdversarialBlocks=1, num_processes=NUM_PROCESSES):
     print(f"\033[0m", end="")
     return generatedForks
 
+# Characteristic string properties
+
+
+
+
+def kCP(w, parallel=True):
+    if parallel:
+        forks = parallel_gen_forks(w)
+    else:
+        forks = gen_forks(w)
+    for fork in forks:
+        viable
