@@ -32,3 +32,5 @@ if __name__ == "__main__":
     print(f"Is tine 0 viable? {PAPER_FORK.is_viable(0)}")
     print(f"Is tine 1 viable? {PAPER_FORK.is_viable(1)}")
     print(f"Is tine 2 viable? {PAPER_FORK.is_viable(2)}")
+    print(f"height of fork: {PAPER_FORK.get_height()}")
+    print(f"reserve of tine 0: {PAPER_FORK.get_tines()[0]} is {PAPER_FORK.reserve( PAPER_FORK.get_tines()[0] )}")

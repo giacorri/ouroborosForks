@@ -1,4 +1,4 @@
-# FORKING LIBRARY v4
+# FORKING LIBRARY v5.0
 import networkx as nx
 import matplotlib.pyplot as plt
 from networkx.drawing.nx_pydot import *
@@ -7,10 +7,11 @@ import concurrent.futures
 
 NUM_PROCESSES = multiprocessing.cpu_count()
 
+# tree graph with only root node
 ROOT = nx.DiGraph()
 ROOT.add_node("0", weight=0, type="honest", n=0)
 
-# PLOTTING
+# Directed rooted tree layout
 def hierarchy_pos(G, root=None, width=1., vert_gap = 0.2, vert_loc = 0, xcenter = 0.5):
 
     if not nx.is_tree(G):
@@ -37,6 +38,7 @@ def hierarchy_pos(G, root=None, width=1., vert_gap = 0.2, vert_loc = 0, xcenter 
             
     return _hierarchy_pos(G, root, width, vert_gap, vert_loc, xcenter)
 
+# plot a directed rooted tree as a fork with labels and colors
 def plot_tree(tree, w, quick=False):
     fig, ax = plt.subplots()
     pos = hierarchy_pos(tree, root='0')
@@ -85,13 +87,14 @@ def plot_tree(tree, w, quick=False):
         plt.show()
 
 # TINE, a list of nodes in a path of the graph
-# def convert_tine(tine):
-#     return [int(node.split(" ")[0]) for node in tine]
+
+
 def truncate_tine(tine, k):
     if len(tine) < k:
         return []
     return tine[:len(tine)-k]
 
+# check if tine1 is a prefix of tine2
 def is_prefix(tine1, tine2):
     if len(tine1) > len(tine2):
         return False
@@ -100,7 +103,34 @@ def is_prefix(tine1, tine2):
             return False
     return True
 
-# FORK struct, composed by a tree graph and a characteristics string
+# get number of the slot in which the node was published
+def get_label(node):
+    return int(node.split(" ")[0])
+
+# compute tine length (number of edges)
+def length_tine(tine):
+    return len(tine)-1
+
+# share edge relation
+def tilde_rel(tine1, tine2):
+    if tine1 == '0' or tine2 == '0':
+        return False
+    # if they share an edge, they should share also the first edge
+    if tine1[:1] == tine2[:1]:
+        return True
+    return False
+
+# common prefix of two tines
+def common_prefix(tine1, tine2):
+        commonPrefix = []
+        for i in range(min(len(tine1), len(tine2))):
+            if tine1[i] == tine2[i]:
+                commonPrefix.append(tine1[i])
+            else:
+                break
+        return commonPrefix
+
+# FORK struct, composed by a tree graph and a characteristic string
 class Fork:
     def __init__(self, w, tree=ROOT):
         self.tree = tree.copy()
@@ -155,6 +185,14 @@ class Fork:
                     return False
             return True
         
+    def is_closed(self):
+        leaves = self.get_leaves()
+        for leaf in leaves:
+            type = self.tree.nodes[leaf]['type']
+            if type == 'adversarial':
+                return False
+        return True
+
     def get_viableTinesIndexes(self):
         viableTinesIndexes = []
         tines = self.get_tines()
@@ -165,14 +203,118 @@ class Fork:
 
     def print(self):
         print(self.get_tines())
-
     
     def plot(self, quick=False):
         plot_tree(self.tree, self.w, quick)
 
     def copy(self):
         return Fork(self.w.copy(), self.tree.copy())
+    
+    def get_height(self):
+        return nx.dag_longest_path_length(self.tree)
 
+    def is_flat(self):
+        tines = self.get_tines()
+        for i in range(len(tines)):
+            for j in range(i+1, len(tines)):
+                if not tilde_rel(tines[i], tines[j]):
+                    if length_tine(tines[i]) == length_tine(tines[j]) and length_tine(tines[i]) == self.get_height():
+                        return True, [i, j]
+        return False, []
+    
+    def gap(self, tine):
+        if not self.is_closed():
+            return "Error: fork is not closed"
+        maxTine = self.get_maximal_tines()[0]
+        return length_tine(maxTine) - length_tine(tine)
+    
+    def reserve(self, tine):
+        if not self.is_closed():
+            return "Error: fork is not closed"
+        label = get_label(tine[-1])
+        total = 0
+        for i in range(label, len(self.w)):
+            if self.w[i] == 1:
+                total += 1
+        return total
+
+    def reach(self, tine):
+        if not self.is_closed():
+            return "Error: fork is not closed"
+        return self.reserve(tine) - self.gap(tine)
+    
+    def rho(self):
+        max = 0
+        for tine in self.get_tines():
+            if self.reach(tine) > max:
+                max = self.reach(tine)
+        return max
+    
+    def get_edge_disjoint_tines(self):
+        tines = self.get_tines()
+        edge_disjoint_tines = []
+        for i in range(len(tines)):
+            for j in range(i+1, len(tines)):
+                if not tilde_rel(tines[i], tines[j]):
+                    edge_disjoint_tines.append([tines[i], tines[j]])
+        return edge_disjoint_tines
+
+    def mu(self):
+        max = 0
+        for edgeDisjointTines in self.get_edge_disjoint_tines():
+            for tines in edgeDisjointTines:
+                tine1 = tines[0]
+                tine2 = tines[1]
+                reach1 = self.reach(tine1)
+                reach2 = self.reach(tine2)
+                if reach1 < reach2:
+                    if reach1 > max:
+                        max = reach1
+                else:
+                    if reach2 > max:
+                        max = reach2
+        return max
+
+    # tine1/tine2
+    def frac_tine(self, nTine1, nTine2):
+        if not self.is_viable(nTine1) or not self.is_viable(nTine2):
+            return "Error: tines are not viable"
+        tines = self.get_tines()
+        tine1 = tines[nTine1]
+        tine2 = tines[nTine2]
+        commonPrefix = common_prefix(tine1, tine2)
+        return length_tine(tine1) - length_tine(commonPrefix)
+
+    def tines_divergence(self, nTine1, nTine2):
+        tines = self.get_tines()
+        tine1 = tines[nTine1]
+        tine2 = tines[nTine2]
+        label1 = get_label(tine1[-1])
+        label2 = get_label(tine2[-1])
+        if label1 < label2:
+            return self.frac_tine(nTine1, nTine2)
+        elif label1 > label2:
+            return self.frac_tine(nTine2, nTine1)
+        else:
+            frac1 = self.frac_tine(nTine1, nTine2)
+            frac2 = self.frac_tine(nTine2, nTine1)
+            if frac1 >= frac2:
+                return frac1
+            else:
+                return frac2
+            
+    def fork_divergence(self):
+        max = 0
+        viableTinesIndexes = self.get_viableTinesIndexes()
+        for i in range(len(viableTinesIndexes)):
+            for j in range(i+1, len(viableTinesIndexes)):
+                divergence = self.tines_divergence(viableTinesIndexes[i], viableTinesIndexes[j])
+                if divergence > max:
+                    max = divergence
+        return max
+    
+    
+# converts a list of tines into a Fork
 def convert_tines_to_fork(tines):
     tree = ROOT.copy()
     wDict = {}
@@ -208,7 +350,7 @@ def convert_tines_to_fork(tines):
     print(f"w {w}")
     return Fork(w, tree)
 
-
+# PLOTTING MULTIPLE FORKS
 def plot_forks(forks, quick=False):
     nForks = len(forks)
     for n in range(nForks):
@@ -259,6 +401,7 @@ def plot_couple_of_forks(forksCouples, quick=False):
         else:
             plt.show()
 
+# FORKS GENERATION
 def gen_forks(w):
     generatedForks = []
     # initialize with tree with only root node
@@ -306,8 +449,7 @@ def gen_forks(w):
     print(f"\033[0m", end="")
     return generatedForks
 
-# PARALLEL COMPUTING
-
+# PARALLEL FORKS CLEANING
 def clean_forks_worker(data, lock, pairs_to_check, result_queue):
     toRemove = []
     for pair in pairs_to_check:
@@ -358,6 +500,7 @@ def parallel_clean_forks(forks, num_processes=NUM_PROCESSES):
     for j in toRemove:
         forks.pop(j)
 
+# PARALLEL FORKS GENERATION
 def gen_forks_worker(generatedForks, start, end, slot, w, maxAdversarialBlocks=1):
     generatedInSlot = []
     # for each fork in the chunk
@@ -430,13 +573,13 @@ def parallel_gen_forks(w, maxAdversarialBlocks=1, num_processes=NUM_PROCESSES):
     print(f"\033[0m", end="")
     return generatedForks
 
-# Characteristic string properties
-
-def kCP(k, w, parallel=True):
-    if parallel:
-        forks = parallel_gen_forks(w)
-    else:
-        forks = gen_forks(w)
+# CHARACTERISTIC STRING PROPERTIES
+def k_cp(k, w, forks=None, parallel=True):
+    if forks == None:
+        if parallel:
+            forks = parallel_gen_forks(w)
+        else:
+            forks = gen_forks(w)
     for fork in forks:
         # print(f"fork: {fork.get_tines()}")
         viableTinesIndexes = fork.get_viableTinesIndexes()
@@ -465,3 +608,108 @@ def kCP(k, w, parallel=True):
                         counterExample = [fork, t1, t2]
                         return False, counterExample
     return True, None
+
+def tau_s_hcg(tau, s, w, forks=None, parallel=True):
+    if forks == None:
+        if parallel:
+            forks = parallel_gen_forks(w)
+        else:
+            forks = gen_forks(w)
+    for fork in forks:
+        viableTinesIndexes = fork.get_viableTinesIndexes()
+        tines = fork.get_tines()
+        for i in range(len(viableTinesIndexes)):
+            tine = tines[viableTinesIndexes[i]]
+            label = int(get_label(tine[-1]))
+            # honest vertices on tine at least s slots before the tine label
+            H = [h for h in tine if int(get_label(h)) + s <= label and fork.tree.nodes[h]['type'] == 'honest']
+            
+            # the path in tine from label(v)+1 to label(t) contains at least tau*s  nodes
+            for h in H:
+                path = tine[tine.index(h)+1:]
+                if len(path) < tau*s:
+                    return False, [fork, tine, h]
+    return True, None
+
+def s_ecq(s, w, forks=None, parallel=True):
+    if forks == None:
+        if parallel:
+            forks = parallel_gen_forks(w)
+        else:
+            forks = gen_forks(w)
+
+    for fork in forks:
+        viableTinesIndexes = fork.get_viableTinesIndexes()
+        tines = fork.get_tines()
+        for i in range(len(viableTinesIndexes)):
+            tine = tines[viableTinesIndexes[i]]
+            label = int(get_label(tine[-1]))
+            # every portion of tine spanning s slots contains at least one honest node
+            for j in range(label-s):
+                slots = list(range(j, j+s))
+
+                path = []
+                for node in tine:
+                    if int(get_label(node)) in slots:
+                        path.append(node)
+
+                containsHonest = False
+                for node in path:
+                    if fork.tree.nodes[node]['type'] == 'honest':
+                        containsHonest = True
+                        break
+                if not containsHonest:
+                    return False, [fork, tine, slots, path]
+    return True, None
+
+def forkable(w, forks=None, parallel=True):
+    if forks == None:
+        if parallel:
+            forks = parallel_gen_forks(w)
+        else:
+            forks = gen_forks(w)
+    for fork in forks:
+        if fork.is_flat():
+            return True, fork
+    return False, None
+
+def rho(w, forks=None, parallel=True):
+    if forks == None:
+        if parallel:
+            forks = parallel_gen_forks(w)
+        else:
+            forks = gen_forks(w)
+    max = 0
+    for fork in forks:
+        if fork.rho() > max:
+            max = fork.rho()
+    return max
+
+def mu(w, forks=None, parallel=True):
+    if forks == None:
+        if parallel:
+            forks = parallel_gen_forks(w)
+        else:
+            forks = gen_forks(w)
+    max = 0
+    for fork in forks:
+        if fork.mu() > max:
+            max = fork.mu()
+    return max
+
+def m(w, forks=None, parallel=True):
+    return (rho(w, forks, parallel), mu(w, forks, parallel))
+
+def divergence(w, forks=None, parallel=True):
+    if forks == None:
+        if parallel:
+            forks = parallel_gen_forks(w)
+        else:
+            forks = gen_forks(w)
+    closedForks = [fork for fork in forks if fork.is_closed()]
+    max = 0
+    for fork in closedForks:
+        divergence = fork.fork_divergence()
+        if divergence > max:
+            max = divergence
+    return max

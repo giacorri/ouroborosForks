@@ -33,6 +33,7 @@ if __name__ == "__main__":
     NON_VIABLE_FORK.plot()
     print(f"\tIs tine 1 viable? {NON_VIABLE_FORK.is_viable(0)}")
     print(f"\tIs tine 2 viable? {NON_VIABLE_FORK.is_viable(1)}")
+    print(f"\tIs closed? {NON_VIABLE_FORK.is_closed()}")
 
     print("OTHER_NON_VIABLE_FORK:\n\t",end="")
     OTHER_NON_VIABLE_FORK.print()
