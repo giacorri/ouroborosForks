@@ -1,7 +1,7 @@
 # FORKING LIBRARY v5.0
 import networkx as nx
-import matplotlib.pyplot as plt
 from networkx.drawing.nx_pydot import *
+import matplotlib.pyplot as plt
 import multiprocessing
 import concurrent.futures
 
@@ -106,6 +106,11 @@ def is_prefix(tine1, tine2):
 # get number of the slot in which the node was published
 def get_label(node):
     return int(node.split(" ")[0])
+
+def is_honest(node):
+    if len(node.split(" ")) == 1:
+        return True
+    return False
 
 # compute tine length (number of edges)
 def length_tine(tine):
@@ -276,7 +281,7 @@ class Fork:
         return max
 
     # tine1/tine2
-    def frac_tine(self, nTine1, nTine2):
+    def tines_frac(self, nTine1, nTine2):
         if not self.is_viable(nTine1) or not self.is_viable(nTine2):
             return "Error: tines are not viable"
         tines = self.get_tines()
@@ -285,32 +290,32 @@ class Fork:
         commonPrefix = common_prefix(tine1, tine2)
         return length_tine(tine1) - length_tine(commonPrefix)
 
-    def tines_divergence(self, nTine1, nTine2):
+    def tines_div(self, nTine1, nTine2):
         tines = self.get_tines()
         tine1 = tines[nTine1]
         tine2 = tines[nTine2]
         label1 = get_label(tine1[-1])
         label2 = get_label(tine2[-1])
         if label1 < label2:
-            return self.frac_tine(nTine1, nTine2)
+            return self.tines_frac(nTine1, nTine2)
         elif label1 > label2:
-            return self.frac_tine(nTine2, nTine1)
+            return self.tines_frac(nTine2, nTine1)
         else:
-            frac1 = self.frac_tine(nTine1, nTine2)
-            frac2 = self.frac_tine(nTine2, nTine1)
+            frac1 = self.tines_frac(nTine1, nTine2)
+            frac2 = self.tines_frac(nTine2, nTine1)
             if frac1 >= frac2:
                 return frac1
             else:
                 return frac2
             
-    def fork_divergence(self):
+    def fork_div(self):
         max = 0
         viableTinesIndexes = self.get_viableTinesIndexes()
         for i in range(len(viableTinesIndexes)):
             for j in range(i+1, len(viableTinesIndexes)):
-                divergence = self.tines_divergence(viableTinesIndexes[i], viableTinesIndexes[j])
-                if divergence > max:
-                    max = divergence
+                div = self.tines_div(viableTinesIndexes[i], viableTinesIndexes[j])
+                if div > max:
+                    max = div
         return max
     
     
@@ -602,8 +607,7 @@ def k_cp(k, w, forks=None, parallel=True):
                     t2 = tine2.copy()
                     if l1 > l2:
                         t1, t2 = t2, t1
-                    # print(f"\t\t\t- t1: {t1}, t2: {t2}")
-                    # print(f"\t\t\t\tIs {truncate_tine(t1, k)} prefix of {t2}? {is_prefix(truncate_tine(t1, k), t2)}")
+
                     if not is_prefix(truncate_tine(t1, k), t2):
                         counterExample = [fork, t1, t2]
                         return False, counterExample
@@ -700,7 +704,7 @@ def mu(w, forks=None, parallel=True):
 def m(w, forks=None, parallel=True):
     return (rho(w, forks, parallel), mu(w, forks, parallel))
 
-def divergence(w, forks=None, parallel=True):
+def div(w, forks=None, parallel=True):
     if forks == None:
         if parallel:
             forks = parallel_gen_forks(w)
@@ -709,7 +713,7 @@ def divergence(w, forks=None, parallel=True):
     closedForks = [fork for fork in forks if fork.is_closed()]
     max = 0
     for fork in closedForks:
-        divergence = fork.fork_divergence()
-        if divergence > max:
-            max = divergence
+        div = fork.fork_div()
+        if div > max:
+            max = div
     return max
