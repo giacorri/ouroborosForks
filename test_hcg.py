@@ -29,11 +29,11 @@ with open("test_hcg.txt", "w") as f:
                 end = time.time()
                 f.write(f"{result} in {(end-begin):.2f} seconds")
                 if not result:
-                    f.write(f"\n\t\tCounterexample: ")
                     counterExFork = counterExample[0]
                     counterExTine = counterExample[1]
                     counterExNode = counterExample[2]
+                    counterExPath = counterExample[3]
                     counterExNodeIndex = counterExTine.index(counterExNode)
-                    # counterExFork.print()
-                    f.write(f"{counterExFork.get_tines()}")
-                    f.write(f"\n\t\tBecause the path after node '{counterExNode}' in tine {counterExTine} contains {length_tine(counterExTine[counterExNodeIndex+1:])} < {tau*s:.1f}(={math.ceil(tau*s)}) nodes")
+                    f.write(f"\n\t\tCounterexample: {counterExFork.get_tines()}")
+                    f.write(f"\n\t\tBecause the path after node '{counterExNode}' in tine {counterExTine} is {counterExPath} which contains {length_tine(counterExTine[counterExNodeIndex:])} < {tau*s:.1f}nodes")
+                    counterExFork.plot(True)

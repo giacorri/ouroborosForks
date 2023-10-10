@@ -87,8 +87,6 @@ def plot_tree(tree, w, quick=False):
         plt.show()
 
 # TINE, a list of nodes in a path of the graph
-
-
 def truncate_tine(tine, k):
     if len(tine) < k:
         return []
@@ -632,7 +630,7 @@ def tau_s_hcg(tau, s, w, forks=None, parallel=True):
             for h in H:
                 path = tine[tine.index(h)+1:]
                 if len(path) < tau*s:
-                    return False, [fork, tine, h]
+                    return False, [fork, tine, h, path]
     return True, None
 
 def s_ecq(s, w, forks=None, parallel=True):
@@ -673,8 +671,9 @@ def forkable(w, forks=None, parallel=True):
         else:
             forks = gen_forks(w)
     for fork in forks:
-        if fork.is_flat():
-            return True, fork
+        isFlat, indexes = fork.is_flat()
+        if isFlat:
+            return True, [fork, indexes]
     return False, None
 
 def rho(w, forks=None, parallel=True):
