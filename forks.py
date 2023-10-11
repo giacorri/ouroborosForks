@@ -504,7 +504,7 @@ def parallel_clean_forks(forks, num_processes=NUM_PROCESSES):
         forks.pop(j)
 
 # PARALLEL FORKS GENERATION
-def gen_forks_worker(generatedForks, start, end, slot, w, maxAdversarialBlocks=1):
+def gen_forks_worker(generatedForks, start, end, slot, w, maxAdversarialBlocksPerSlot=1):
     generatedInSlot = []
     # for each fork in the chunk
     for fork in generatedForks[start:end]:
@@ -522,7 +522,7 @@ def gen_forks_worker(generatedForks, start, end, slot, w, maxAdversarialBlocks=1
                 newFork.tree.add_node(str(slot + 1) + " a" + str(k), weight=slot + 1, type="a", n=k)
                 newFork.tree.add_edge(node, str(slot + 1) + " a" + str(k))
                 generatedInSlot.append(newFork)
-                if k < maxAdversarialBlocks:
+                if k < maxAdversarialBlocksPerSlot:
                     k += 1
                     for otherNode in fork.tree.nodes:
                         if otherNode != node:
@@ -534,7 +534,7 @@ def gen_forks_worker(generatedForks, start, end, slot, w, maxAdversarialBlocks=1
     print(f"\t\t\tFINISHED CHUNK {start+1}-{end}: generated {len(generatedInSlot)} forks")
     return generatedInSlot
 
-def parallel_gen_forks(w, maxAdversarialBlocks=1, num_processes=NUM_PROCESSES):
+def parallel_gen_forks(w, maxAdversarialBlocksPerSlot=1, num_processes=NUM_PROCESSES):
     generatedForks = []
     # initialize with tree with only root node
     generatedForks.append(Fork(w))
@@ -560,12 +560,12 @@ def parallel_gen_forks(w, maxAdversarialBlocks=1, num_processes=NUM_PROCESSES):
                     end = len(generatedForks)
                 if end > 0:
                     print(f"\t\tSTARTING CHUNK {start+1}-{end}")
-                    futures.append(executor.submit(gen_forks_worker, generatedForks, start, end, slot, w, maxAdversarialBlocks))
+                    futures.append(executor.submit(gen_forks_worker, generatedForks, start, end, slot, w, maxAdversarialBlocksPerSlot))
             generatedInSlot = []
             for future in concurrent.futures.as_completed(futures):
                 generatedInSlot += future.result()
         nGenerated = len(generatedInSlot)
-        if w[slot] == 0 or maxAdversarialBlocks == 1:
+        if w[slot] == 0 or maxAdversarialBlocksPerSlot == 1:
             print(f"\tFINISHED GENERATION: {nGenerated} forks")
         else:
             print(f"\tFINISHED GENERATION: {nGenerated} forks to clean")

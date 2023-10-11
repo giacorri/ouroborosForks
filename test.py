@@ -256,20 +256,3 @@ if __name__ == '__main__':
                     f.write(f"\n{len(W[n])} & {lens[n]} & {generationTimes[n]:.2f} & {cpTimes[n]:.2f} & {hcgTimes[n]:.2f} & {ecqTimes[n]:.2f} & {forkableTimes[n]:.2f} & {lens2[n]} & {generationTimes2[n]} & {cpTimes2[n]} & {hcgTimes2[n]} & {ecqTimes2[n]} & {forkableTimes2[n]} \\\\ \hline")
                 else:
                     f.write(f"\n{len(W[n])} & {lens[n]} & {generationTimes[n]:.2f} & {cpTimes[n]:.2f} & {hcgTimes[n]:.2f} & {ecqTimes[n]:.2f} & {forkableTimes[n]:.2f} & {lens2[n]} & {generationTimes2[n]:.2f} & {cpTimes2[n]:.2f} & {hcgTimes2[n]:.2f} & {ecqTimes2[n]:.2f} & {forkableTimes2[n]:.2f} \\\\ \hline")
-
-
-"""     with open("test_results.txt", "w") as f:
-
-        f.write(f"\nmax 1 block per slot")
-        f.write(f"\nlen(w) & gen & cp & hcg & ecq & forkable \\\\ \\hline")
-        for n in range(len(W)):
-            f.write(f"\n{len(W[n])} & {generationTimes[n]:.2f} & {cpTimes[n]:.2f} & {hcgTimes[n]:.2f} & {ecqTimes[n]:.2f} & {forkableTimes[n]:.2f} \\\\ \hline")
-
-        f.write(f"\nmax 2 block per slot")
-        f.write(f"\nlen(w) & gen & cp & hcg & ecq & forkable \\\\ \\hline")
-        # for n in range(len(W)-1):
-        for n in range(len(W)-1):
-            f.write(f"\n{len(W[n])} & {generationTimes2[n]:.2f} & {cpTimes2[n]:.2f} & {hcgTimes2[n]:.2f} & {ecqTimes2[n]:.2f} & {forkableTimes2[n]:.2f} \\\\ \hline") """
-
-
-    
