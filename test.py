@@ -4,7 +4,7 @@ import time
 import math
 from multiprocessing import freeze_support
 
-PLOT = False
+PLOT = True
 
 W = [ [0, 1, 0, 1], [1, 0, 1, 1, 0], [0, 1, 0, 1, 1, 0], [1, 0, 1, 1, 0, 1, 0], [1, 0, 1, 1, 0, 1, 0, 1]]
 K = [2, 4, 7]
@@ -24,8 +24,6 @@ cpTimes2 = []
 hcgTimes2 = []
 ecqTimes2 = []
 forkableTimes2 = []
-
-
 
 if __name__ == '__main__':
     freeze_support()
@@ -64,7 +62,7 @@ if __name__ == '__main__':
                     f.write(f"\n\t\t{truncate_tine(counterExTine1, k)} is not a prefix of {counterExTine2}")
                     print(f"\t\t{truncate_tine(counterExTine1, k)} is not a prefix of {counterExTine2}")
                     if PLOT:
-                        counterExample[0].plot(True)
+                        counterExample[0].plot()
             cpTimes.append(sum(wCpTimes)/len(wCpTimes))
 
             # (tau,s)-hcg
@@ -86,10 +84,10 @@ if __name__ == '__main__':
                         counterExNodeIndex = counterExTine.index(counterExNode)
                         f.write(f"\n\t\tCounterexample: {counterExFork.get_tines()}")
                         print(f"\t\tCounterexample: {counterExFork.get_tines()}")
-                        f.write(f"\n\t\tBecause the path after node '{counterExNode}' in tine {counterExTine} is {counterExPath} which contains {length_tine(counterExTine[counterExNodeIndex:])} < {tau*s:.1f} nodes")
-                        print(f"\t\tBecause the path after node '{counterExNode}' in tine {counterExTine} is {counterExPath} which contains {length_tine(counterExTine[counterExNodeIndex:])} < {tau*s:.1f} nodes")
+                        f.write(f"\n\t\tBecause the path after node '{counterExNode}' in tine {counterExTine}\n\t\tis {counterExPath} which contains {length_tine(counterExTine[counterExNodeIndex:])} < {tau*s:.1f} nodes")
+                        print(f"\t\tBecause the path after node '{counterExNode}' in tine {counterExTine}\n\t\tis {counterExPath} which contains {length_tine(counterExTine[counterExNodeIndex:])} < {tau*s:.1f} nodes")
                         if PLOT:
-                            counterExFork.plot(True)
+                            counterExFork.plot()
             hcgTimes.append(sum(wHcgTimes)/len(wHcgTimes))
             # s-ecq
             f.write(f"\n\tECQ")
@@ -108,10 +106,10 @@ if __name__ == '__main__':
                     counterExPath = counterExample[3]
                     f.write(f"\n\t\tCounterexample: {counterExFork.get_tines()}")
                     print(f"\t\tCounterexample: {counterExFork.get_tines()}")
-                    f.write(f"\n\t\tBecause the portion of the tine {counterExTine} spanning the {s} slots {counterExPortion} is {counterExPath}, which does not contain honest blocks")
-                    print(f"\t\tBecause the portion of the tine {counterExTine} spanning the {s} slots {counterExPortion} is {counterExPath}, which does not contain honest blocks")
+                    f.write(f"\n\t\tBecause the portion of the tine {counterExTine} spanning the {s} slots {counterExPortion}\n\t\tis {counterExPath}, which does not contain honest blocks")
+                    print(f"\t\tBecause the portion of the tine {counterExTine} spanning the {s} slots {counterExPortion}\n\t\tis {counterExPath}, which does not contain honest blocks")
                     if PLOT:
-                        counterExFork.plot(True)
+                        counterExFork.plot()
             ecqTimes.append(sum(wEcqTimes)/len(wEcqTimes))
             # forkable
             f.write(f"\n\tFORKABLE")
@@ -133,7 +131,7 @@ if __name__ == '__main__':
                 f.write(f"\n\t\tBecause the edge-disjoint tines {tine1} and {tine2} have maximum length")
                 print(f"\t\tBecause the edge-disjoint tines {tine1} and {tine2} have maximum length")
                 if PLOT:
-                        flatFork.plot(True)
+                        flatFork.plot()
 
         f.write("\nTESTs, 2 maximum block per slot")
         print("TESTs, 2 maximum block per slot")
@@ -171,7 +169,7 @@ if __name__ == '__main__':
                     f.write(f"\n\t\t{truncate_tine(counterExTine1, k)} is not a prefix of {counterExTine2}")
                     print(f"\t\t{truncate_tine(counterExTine1, k)} is not a prefix of {counterExTine2}")
                     if PLOT:
-                        counterExample[0].plot(True)
+                        counterExample[0].plot()
             cpTimes2.append(sum(wCpTimes)/len(wCpTimes))
             # (tau,s)-hcg
             f.write(f"\n\tHCG")
@@ -192,10 +190,10 @@ if __name__ == '__main__':
                         counterExNodeIndex = counterExTine.index(counterExNode)
                         f.write(f"\n\t\tCounterexample: {counterExFork.get_tines()}")
                         print(f"\t\tCounterexample: {counterExFork.get_tines()}")
-                        f.write(f"\n\t\tBecause the path after node '{counterExNode}' in tine {counterExTine} is {counterExPath} which contains {length_tine(counterExTine[counterExNodeIndex:])} < {tau*s:.1f} nodes")
-                        print(f"\t\tBecause the path after node '{counterExNode}' in tine {counterExTine} is {counterExPath} which contains {length_tine(counterExTine[counterExNodeIndex:])} < {tau*s:.1f} nodes")
+                        f.write(f"\n\t\tBecause the path after node '{counterExNode}' in tine {counterExTine}\n\t\tis {counterExPath} which contains {length_tine(counterExTine[counterExNodeIndex:])} < {tau*s:.1f} nodes")
+                        print(f"\t\tBecause the path after node '{counterExNode}' in tine {counterExTine}\n\t\tis {counterExPath} which contains {length_tine(counterExTine[counterExNodeIndex:])} < {tau*s:.1f} nodes")
                         if PLOT:
-                            counterExFork.plot(True)
+                            counterExFork.plot()
             hcgTimes2.append(sum(wHcgTimes)/len(wHcgTimes))
             # s-ecq
             f.write(f"\n\tECQ")
@@ -214,10 +212,10 @@ if __name__ == '__main__':
                     counterExPath = counterExample[3]
                     f.write(f"\n\t\tCounterexample: {counterExFork.get_tines()}")
                     print(f"\t\tCounterexample: {counterExFork.get_tines()}")
-                    f.write(f"\n\t\tBecause the portion of the tine {counterExTine} spanning the {s} slots {counterExPortion} is {counterExPath}, which does not contain honest blocks")
-                    print(f"\t\tBecause the portion of the tine {counterExTine} spanning the {s} slots {counterExPortion} is {counterExPath}, which does not contain honest blocks")
+                    f.write(f"\n\t\tBecause the portion of the tine {counterExTine} spanning the {s} slots {counterExPortion}\n\t\tis {counterExPath}, which does not contain honest blocks")
+                    print(f"\t\tBecause the portion of the tine {counterExTine} spanning the {s} slots {counterExPortion}\n\t\tis {counterExPath}, which does not contain honest blocks")
                     if PLOT:
-                        counterExFork.plot(True)
+                        counterExFork.plot()
             ecqTimes2.append(sum(wEcqTimes)/len(wEcqTimes))
             # forkable
             f.write(f"\n\tFORKABLE")
@@ -239,7 +237,7 @@ if __name__ == '__main__':
                 f.write(f"\n\t\tBecause the edge-disjoint tines {tine1} and {tine2} have maximum length")
                 print(f"\t\tBecause the edge-disjoint tines {tine1} and {tine2} have maximum length")
                 if PLOT:
-                    flatFork.plot(True)            
+                    flatFork.plot()            
 
     lens2.append("NA")
     generationTimes2.append("NA")
