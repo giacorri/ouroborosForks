@@ -504,12 +504,13 @@ def parallel_clean_forks(forks, num_processes=NUM_PROCESSES):
     for j in toRemove:
         forks.pop(j)
 
+
+
 # PARALLEL FORKS GENERATION
-def gen_forks_worker(generatedForks, start, end, slot, w, maxAdversarialBlocks=1):
-    generatedInSlot = []
-    # for each fork in the chunk
-    for fork in generatedForks[start:end]:
-        if w[slot] == 0:
+def worker_gen_forks(maxAdversarialBlocks, wSl, slot, generatedForks, start, end, generatedInSlot):
+    for forkIndex in range(start, end):
+        fork = generatedForks[forkIndex]
+        if wSl == 0:
             for maximalTine in fork.get_maximal_tines():
                 newFork = fork.copy()
                 newFork.tree.add_node(str(slot + 1), weight=slot + 1, type="h")
@@ -518,67 +519,39 @@ def gen_forks_worker(generatedForks, start, end, slot, w, maxAdversarialBlocks=1
         else:
             generatedInSlot.append(fork.copy())
             for node in fork.tree.nodes:
-                k = 1
                 newFork = fork.copy()
-                newFork.tree.add_node(str(slot + 1) + "a" + str(k), weight=slot + 1, type="a")
-                newFork.tree.add_edge(node, str(slot + 1) + "a" + str(k))
+                newFork.tree.add_node(str(slot + 1) + "_1", weight=slot + 1, type="a")
+                newFork.tree.add_edge(node, str(slot + 1) + "_1")
                 generatedInSlot.append(newFork)
-                if k < maxAdversarialBlocks:
-                    k += 1
-                    for otherNode in fork.tree.nodes:
-                        if otherNode != node:
-                            newNewFork = newFork.copy()
-                            newNewFork.tree.add_node(str(slot + 1) + "a" + str(k), weight=slot + 1, type="a")
-                            newNewFork.tree.add_edge(otherNode, str(slot + 1) + "a" + str(k))
-                            generatedInSlot.append(newNewFork)
-    
-    print(f"\t\t\tFINISHED CHUNK {start+1}-{end}: generated {len(generatedInSlot)} forks")
-    return generatedInSlot
+                if maxAdversarialBlocks == 2:
+                    newFork = newFork.copy()
+                    newFork.tree.add_node(str(slot + 1) + "_2", weight=slot + 1, type="a")
+                    newFork.tree.add_edge(node, str(slot + 1) + "_2")
+                    generatedInSlot.append(newFork)
 
 def parallel_gen_forks(w, maxAdversarialBlocks=1, num_processes=NUM_PROCESSES):
-    generatedForks = []
-    # initialize with tree with only root node
-    # generatedForks.append(Fork(w))
+
+    generatedForks = multiprocessing.Manager().list()
     generatedForks.append(Fork())
 
-    # for each slot
-    for slot in range(len(w)):
-        # print green if honest slot, red if adversarial slot
-        if w[slot] == 0:
-            print(f"\033[92m", end="")
-        else:
-            print(f"\033[91m", end="")
+    for sl in range(len(w)):
+        generatedInSlot = multiprocessing.Manager().list()
+        processes = []
+        for i in range(num_processes):
+            start = i * len(generatedForks) // num_processes
+            end = (i + 1) * len(generatedForks) // num_processes if i < num_processes - 1 else len(generatedForks)
+            
+            process = multiprocessing.Process(target=worker_gen_forks, args=(maxAdversarialBlocks, w[sl], sl, generatedForks, start, end, generatedInSlot))
+            processes.append(process)
+            process.start()
 
-        print(f"slot {slot+1}: starting with {len(generatedForks)} forks")
-        
-        with concurrent.futures.ThreadPoolExecutor(max_workers=num_processes) as executor:
-            futures = []
-            chunkSize = len(generatedForks) // NUM_PROCESSES
-            # for each process
-            for i in range(NUM_PROCESSES):
-                start = i * chunkSize
-                end = start + chunkSize
-                # if last process
-                if i == NUM_PROCESSES - 1:
-                    end = len(generatedForks)
-                if end > 0:
-                    print(f"\t\tSTARTING CHUNK {start+1}-{end}")
-                    futures.append(executor.submit(gen_forks_worker, generatedForks, start, end, slot, w, maxAdversarialBlocks))
-            generatedInSlot = []
-            for future in concurrent.futures.as_completed(futures):
-                generatedInSlot += future.result()
-        nGenerated = len(generatedInSlot)
-        """ if w[slot] == 0 or maxAdversarialBlocks == 1:
-            print(f"\tFINISHED GENERATION: {nGenerated} forks")
-        else:
-            print(f"\tFINISHED GENERATION: {nGenerated} forks to clean")
-            parallel_clean_forks(generatedInSlot)
-            print(f"\tFINISHED SLOT {slot+1}: removed {nGenerated - len(generatedInSlot)} duplicates") """
-        print(f"\tFINISHED SLOT {slot+1}: generated {nGenerated} forks")
+        for process in processes:
+            process.join()
+
         generatedForks = generatedInSlot
 
-    print(f"\033[0m", end="")
     return generatedForks
+
 
 # CHARACTERISTIC STRING PROPERTIES
 def k_cp(k, w, forks=None, parallel=True):
