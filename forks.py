@@ -565,12 +565,12 @@ def parallel_gen_forks(w, maxAdversarialBlocks=1, num_processes=NUM_PROCESSES):
             for future in concurrent.futures.as_completed(futures):
                 generatedInSlot += future.result()
         nGenerated = len(generatedInSlot)
-        """ if w[slot] == 0 or maxAdversarialBlocks == 1:
+        if w[slot] == 0 or maxAdversarialBlocks == 1:
             print(f"\tFINISHED GENERATION: {nGenerated} forks")
         else:
             print(f"\tFINISHED GENERATION: {nGenerated} forks to clean")
             parallel_clean_forks(generatedInSlot)
-            print(f"\tFINISHED SLOT {slot+1}: removed {nGenerated - len(generatedInSlot)} duplicates") """
+            print(f"\tFINISHED SLOT {slot+1}: removed {nGenerated - len(generatedInSlot)} duplicates")
         print(f"\tFINISHED SLOT {slot+1}: generated {nGenerated} forks")
         generatedForks = generatedInSlot
 
