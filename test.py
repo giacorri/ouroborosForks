@@ -4,7 +4,7 @@ import time
 import math
 from multiprocessing import freeze_support
 
-W = [[1, 0, 1, 1, 0], [1, 0, 1, 1, 0, 1, 0], [1, 0, 1, 1, 0, 1, 0, 1], [1, 0, 1, 1, 0, 1, 0, 1, 0]]
+W = [[1, 0, 1, 1, 0], [1, 0, 1, 1, 0, 1, 0], [1, 0, 1, 0, 1, 0, 1], [1, 0, 1, 1, 0, 1, 0, 1, 0]]
 K = [2, 4, 7]
 S = [2, 5, 8]
 TAU = [1/2, 1/3, 1/4]
@@ -104,7 +104,8 @@ if __name__ == '__main__':
 
         f.write("\nTESTs, 2 maximum block per slot")
         print("TESTs, 2 maximum block per slot")
-        for w in range(3):
+        for i in range(3):
+            w = W[i]
             f.write(f"\n- w = {w}, ")
             # generation
             start = time.time()

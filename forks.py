@@ -50,7 +50,7 @@ def plot_tree(tree, w, quick=False):
     node_labels = {node: str(tree.nodes[node]['weight']) for node in tree.nodes()}
 
     # color nodes according to type
-    node_colors = {'honest': 'green', 'adversarial': 'red'}
+    node_colors = {'honest': 'green', 'a': 'red'}
     node_colors = [node_colors[tree.nodes[node]['type']] for node in tree.nodes()]
 
     # draw graph
@@ -192,7 +192,7 @@ class Fork:
         leaves = self.get_leaves()
         for leaf in leaves:
             type = self.tree.nodes[leaf]['type']
-            if type == 'adversarial':
+            if type == 'a':
                 return False
         return True
 
@@ -338,7 +338,7 @@ def convert_tines_to_fork(tines):
                     wDict[weight] = 0
                     n = 0
                 else:
-                    type = "adversarial"
+                    type = "a"
                     print(f"type {type}")
                     wDict[weight] = 1
                     n = int(splittedNodeName[1][1:])
@@ -372,7 +372,7 @@ def plot_couple_of_forks(forksCouples, quick=False):
         y_positions1 = {node: -fork1.tree.nodes[node]['weight'] for node in fork1.tree.nodes()}
         pos1 = {k: (-y_positions1[k], pos1[k][0],) for k in pos1}
         node_labels1 = {node: str(fork1.tree.nodes[node]['weight']) for node in fork1.tree.nodes()}
-        node_colors1 = {'honest': 'green', 'adversarial': 'red'}
+        node_colors1 = {'honest': 'green', 'a': 'red'}
         node_colors1 = [node_colors1[fork1.tree.nodes[node]['type']] for node in fork1.tree.nodes()]
         nx.draw(fork1.tree, pos1, labels=node_labels1, with_labels=True, node_color=node_colors1, node_size=400, ax=ax1)
 
@@ -380,7 +380,7 @@ def plot_couple_of_forks(forksCouples, quick=False):
         y_positions2 = {node: -fork2.tree.nodes[node]['weight'] for node in fork2.tree.nodes()}
         pos2 = {k: (-y_positions2[k], pos2[k][0],) for k in pos2}
         node_labels2 = {node: str(fork2.tree.nodes[node]['weight']) for node in fork2.tree.nodes()}
-        node_colors2 = {'honest': 'green', 'adversarial': 'red'}
+        node_colors2 = {'honest': 'green', 'a': 'red'}
         node_colors2 = [node_colors2[fork2.tree.nodes[node]['type']] for node in fork2.tree.nodes()]
         nx.draw(fork2.tree, pos2, labels=node_labels2, with_labels=True, node_color=node_colors2, node_size=400, ax=ax2)
 
@@ -440,7 +440,7 @@ def gen_forks(w):
                     # save fork where the adversary publishes a block after node
                     newFork = fork.copy()
                     # add new adversarial block to node
-                    newFork.tree.add_node(str(slot+1) + " a1", weight=slot+1, type="adversarial", n=1)
+                    newFork.tree.add_node(str(slot+1) + " a1", weight=slot+1, type="a", n=1)
                     # add edge from node to new adversarial block
                     newFork.tree.add_edge(node, str(slot+1) + " a1")
                     # add new fork to list
@@ -519,7 +519,7 @@ def gen_forks_worker(generatedForks, start, end, slot, w, maxAdversarialBlocks=1
             for node in fork.tree.nodes:
                 k = 1
                 newFork = fork.copy()
-                newFork.tree.add_node(str(slot + 1) + " a" + str(k), weight=slot + 1, type="adversarial", n=k)
+                newFork.tree.add_node(str(slot + 1) + " a" + str(k), weight=slot + 1, type="a", n=k)
                 newFork.tree.add_edge(node, str(slot + 1) + " a" + str(k))
                 generatedInSlot.append(newFork)
                 if k < maxAdversarialBlocks:
@@ -527,11 +527,11 @@ def gen_forks_worker(generatedForks, start, end, slot, w, maxAdversarialBlocks=1
                     for otherNode in fork.tree.nodes:
                         if otherNode != node:
                             newNewFork = newFork.copy()
-                            newNewFork.tree.add_node(str(slot + 1) + " a" + str(k), weight=slot + 1, type="adversarial", n=k)
+                            newNewFork.tree.add_node(str(slot + 1) + " a" + str(k), weight=slot + 1, type="a", n=k)
                             newNewFork.tree.add_edge(otherNode, str(slot + 1) + " a" + str(k))
                             generatedInSlot.append(newNewFork)
     
-    print(f"\t\tFINISHED CHUNK {start+1}-{end}: generated {len(generatedInSlot)} forks")
+    print(f"\t\t\tFINISHED CHUNK {start+1}-{end}: generated {len(generatedInSlot)} forks")
     return generatedInSlot
 
 def parallel_gen_forks(w, maxAdversarialBlocks=1, num_processes=NUM_PROCESSES):
@@ -565,12 +565,13 @@ def parallel_gen_forks(w, maxAdversarialBlocks=1, num_processes=NUM_PROCESSES):
             for future in concurrent.futures.as_completed(futures):
                 generatedInSlot += future.result()
         nGenerated = len(generatedInSlot)
-        if w[slot] == 0 or maxAdversarialBlocks == 1:
+        """ if w[slot] == 0 or maxAdversarialBlocks == 1:
             print(f"\tFINISHED GENERATION: {nGenerated} forks")
         else:
             print(f"\tFINISHED GENERATION: {nGenerated} forks to clean")
             parallel_clean_forks(generatedInSlot)
-            print(f"\tFINISHED SLOT {slot+1}: removed {nGenerated - len(generatedInSlot)} duplicates")
+            print(f"\tFINISHED SLOT {slot+1}: removed {nGenerated - len(generatedInSlot)} duplicates") """
+        print(f"\tFINISHED SLOT {slot+1}: generated {nGenerated} forks")
         generatedForks = generatedInSlot
 
     print(f"\033[0m", end="")
