@@ -9,7 +9,7 @@ NUM_PROCESSES = multiprocessing.cpu_count()
 
 # tree graph with only root node
 ROOT = nx.DiGraph()
-ROOT.add_node("0", weight=0, type="honest", n=0)
+ROOT.add_node("0", weight=0, type="h", n=0)
 
 # Directed rooted tree layout
 def hierarchy_pos(G, root=None, width=1., vert_gap = 0.2, vert_loc = 0, xcenter = 0.5):
@@ -119,7 +119,7 @@ def tilde_rel(tine1, tine2):
     if tine1 == '0' or tine2 == '0':
         return False
     # if they share an edge, they should share also the first edge
-    if tine1[:1] == tine2[:1]:
+    if tine1[1] == tine2[1]:
         return True
     return False
 
@@ -218,10 +218,11 @@ class Fork:
 
     def is_flat(self):
         tines = self.get_tines()
+        height = self.get_height()
         for i in range(len(tines)):
             for j in range(i+1, len(tines)):
                 if not tilde_rel(tines[i], tines[j]):
-                    if length_tine(tines[i]) == length_tine(tines[j]) and length_tine(tines[i]) == self.get_height():
+                    if length_tine(tines[i]) == length_tine(tines[j]) and length_tine(tines[i]) == height:
                         return True, [i, j]
         return False, []
     
@@ -316,7 +317,23 @@ class Fork:
                     max = div
         return max
     
+    def closure(self):
+        # remove all adversarial leaves
+        closure = self.copy()
+        adversarialLeaves = [ leaf for leaf in closure.get_leaves() if closure.tree.nodes[leaf]['type'] == 'a' ]
+        while len(adversarialLeaves) > 0:
+            closure.tree.remove_nodes_from(adversarialLeaves)
+            adversarialLeaves = [ leaf for leaf in closure.get_leaves() if closure.tree.nodes[leaf]['type'] == 'a' ]
+        return closure
     
+    def prefix_of_tine_in_closure(self, tine):
+        t = tine.copy()
+        leaf = t[-1]
+        while self.tree.nodes[leaf]['type'] == 'a':
+            t.pop()
+            leaf = t[-1]
+        return t
+
 # converts a list of tines into a Fork
 def convert_tines_to_fork(tines):
     tree = ROOT.copy()
@@ -326,23 +343,18 @@ def convert_tines_to_fork(tines):
         for i in range(1, len(tine)):
             node = tine[i]
             if node not in tree.nodes:
-                print(f"node {node} not in tree")
                 splittedNodeName = node.split(" ")
                 weight = int(splittedNodeName[0])
-                print(f"weight {weight}")
                 if weight > maxSlot:
                     maxSlot = weight
                 if len(splittedNodeName) == 1:
-                    type = "honest"
-                    print(f"type {type}")
+                    type = "h"
                     wDict[weight] = 0
                     n = 0
                 else:
                     type = "a"
-                    print(f"type {type}")
                     wDict[weight] = 1
                     n = int(splittedNodeName[1][1:])
-                    print(f"n {n}")    
                 tree.add_node(node, weight=weight, type=type, n=n)
             # if the edge is not already in the tree
             if not tree.has_edge(tine[i-1], tine[i]):
@@ -350,7 +362,6 @@ def convert_tines_to_fork(tines):
     w = [1] * (maxSlot)
     for i in wDict:
         w[i-1] = wDict[i]
-    print(f"w {w}")
     return Fork(w, tree)
 
 # PLOTTING MULTIPLE FORKS
@@ -426,7 +437,7 @@ def gen_forks(w):
                 for maximalTine in fork.get_maximal_tines():
                     newFork = fork.copy()
                     # add new honest node
-                    newFork.tree.add_node(str(slot+1), weight=slot+1, type="honest", n=0)
+                    newFork.tree.add_node(str(slot+1), weight=slot+1, type="h", n=0)
                     # add edge from last node of maximal tine to new node
                     newFork.tree.add_edge(maximalTine[-1], str(slot+1))
                     # add new fork to list
@@ -511,7 +522,7 @@ def gen_forks_worker(generatedForks, start, end, slot, w, maxAdversarialBlocksPe
         if w[slot] == 0:
             for maximalTine in fork.get_maximal_tines():
                 newFork = fork.copy()
-                newFork.tree.add_node(str(slot + 1), weight=slot + 1, type="honest", n=0)
+                newFork.tree.add_node(str(slot + 1), weight=slot + 1, type="h", n=0)
                 newFork.tree.add_edge(maximalTine[-1], str(slot + 1))
                 generatedInSlot.append(newFork)
         else:
@@ -565,12 +576,12 @@ def parallel_gen_forks(w, maxAdversarialBlocksPerSlot=1, num_processes=NUM_PROCE
             for future in concurrent.futures.as_completed(futures):
                 generatedInSlot += future.result()
         nGenerated = len(generatedInSlot)
-        if w[slot] == 0 or maxAdversarialBlocksPerSlot == 1:
-            print(f"\tFINISHED GENERATION: {nGenerated} forks")
-        else:
-            print(f"\tFINISHED GENERATION: {nGenerated} forks to clean")
-            parallel_clean_forks(generatedInSlot)
-            print(f"\tFINISHED SLOT {slot+1}: removed {nGenerated - len(generatedInSlot)} duplicates")
+        # if w[slot] == 0 or maxAdversarialBlocksPerSlot == 1:
+        #     print(f"\tFINISHED GENERATION: {nGenerated} forks")
+        # else:
+        #     print(f"\tFINISHED GENERATION: {nGenerated} forks to clean")
+        #     parallel_clean_forks(generatedInSlot)
+        #     print(f"\tFINISHED SLOT {slot+1}: removed {nGenerated - len(generatedInSlot)} duplicates")
         print(f"\tFINISHED SLOT {slot+1}: generated {nGenerated} forks")
         generatedForks = generatedInSlot
 
