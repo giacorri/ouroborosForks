@@ -81,7 +81,7 @@ def plot_tree(tree, w, quick=False):
     # plot
     if quick:
         plt.show(block=False)
-        plt.pause(0.4)
+        plt.pause(0.2)
         plt.close()
     else:
         plt.show()
@@ -576,13 +576,13 @@ def parallel_gen_forks(w, maxAdversarialBlocksPerSlot=1, num_processes=NUM_PROCE
             for future in concurrent.futures.as_completed(futures):
                 generatedInSlot += future.result()
         nGenerated = len(generatedInSlot)
-        # if w[slot] == 0 or maxAdversarialBlocksPerSlot == 1:
-        #     print(f"\tFINISHED GENERATION: {nGenerated} forks")
-        # else:
-        #     print(f"\tFINISHED GENERATION: {nGenerated} forks to clean")
-        #     parallel_clean_forks(generatedInSlot)
-        #     print(f"\tFINISHED SLOT {slot+1}: removed {nGenerated - len(generatedInSlot)} duplicates")
-        print(f"\tFINISHED SLOT {slot+1}: generated {nGenerated} forks")
+        if w[slot] == 0 or maxAdversarialBlocksPerSlot == 1:
+            print(f"\tFINISHED GENERATION: {nGenerated} forks")
+        else:
+            print(f"\tFINISHED GENERATION: {nGenerated} forks to clean")
+            parallel_clean_forks(generatedInSlot)
+            print(f"\tFINISHED SLOT {slot+1}: removed {nGenerated - len(generatedInSlot)} duplicates")
+        # print(f"\tFINISHED SLOT {slot+1}: generated {nGenerated} forks")
         generatedForks = generatedInSlot
 
     print(f"\033[0m", end="")
