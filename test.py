@@ -4,7 +4,7 @@ import time
 import math
 from multiprocessing import freeze_support
 
-PLOT = True
+PLOT = False
 
 W = [ [0, 1, 0, 1], [1, 0, 1, 1, 0], [0, 1, 0, 1, 1, 0], [1, 0, 1, 1, 0, 1, 0], [1, 0, 1, 1, 0, 1, 0, 1]]
 K = [2, 4, 7]
@@ -120,9 +120,10 @@ if __name__ == '__main__':
             f.write(f"\n\t- forkable? {result}, in {end - start:.2f} seconds")
             print(f"\t- forkable? {result}, in {end - start:.2f} seconds")
             if result:
+                print(f"example: {example}")
                 flatFork = example[0]
-                index1 = example[1]
-                index2 = example[2]
+                index1 = example[1][0]
+                index2 = example[1][1]
                 f.write(f"\n\t\tFlat fork: {flatFork.get_tines()}")
                 print(f"\t\tFlat fork: {flatFork.get_tines()}")
                 tines = flatFork.get_tines()
@@ -227,8 +228,8 @@ if __name__ == '__main__':
             print(f"\t- forkable? {result}, in {end - start:.2f} seconds")
             if result:
                 flatFork = example[0]
-                index1 = example[1]
-                index2 = example[2]
+                index1 = example[1][0]
+                index2 = example[1][1]
                 f.write(f"\n\t\tFlat fork: {flatFork.get_tines()}")
                 print(f"\t\tFlat fork: {flatFork.get_tines()}")
                 tines = flatFork.get_tines()

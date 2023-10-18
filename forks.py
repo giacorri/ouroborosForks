@@ -50,7 +50,7 @@ def plot_tree(tree, w, quick=False):
     node_labels = {node: str(tree.nodes[node]['weight']) for node in tree.nodes()}
 
     # color nodes according to type
-    node_colors = {'honest': 'green', 'a': 'red'}
+    node_colors = {'h': 'green', 'a': 'red'}
     node_colors = [node_colors[tree.nodes[node]['type']] for node in tree.nodes()]
 
     # draw graph
@@ -182,7 +182,7 @@ class Fork:
             return True
         else:
             honestPriorSlots = [i+1 for i in range(int(label)) if self.w[i] == 0]
-            honestPiorNodes = [node for node in self.tree.nodes if self.tree.nodes[node]['weight'] in honestPriorSlots and self.tree.nodes[node]['type'] == 'honest']
+            honestPiorNodes = [node for node in self.tree.nodes if self.tree.nodes[node]['weight'] in honestPriorSlots and self.tree.nodes[node]['type'] == 'h']
             for h in honestPiorNodes:
                 if self.depth(h) > self.depth(lastNode):
                     return False
@@ -383,7 +383,7 @@ def plot_couple_of_forks(forksCouples, quick=False):
         y_positions1 = {node: -fork1.tree.nodes[node]['weight'] for node in fork1.tree.nodes()}
         pos1 = {k: (-y_positions1[k], pos1[k][0],) for k in pos1}
         node_labels1 = {node: str(fork1.tree.nodes[node]['weight']) for node in fork1.tree.nodes()}
-        node_colors1 = {'honest': 'green', 'a': 'red'}
+        node_colors1 = {'h': 'green', 'a': 'red'}
         node_colors1 = [node_colors1[fork1.tree.nodes[node]['type']] for node in fork1.tree.nodes()]
         nx.draw(fork1.tree, pos1, labels=node_labels1, with_labels=True, node_color=node_colors1, node_size=400, ax=ax1)
 
@@ -391,7 +391,7 @@ def plot_couple_of_forks(forksCouples, quick=False):
         y_positions2 = {node: -fork2.tree.nodes[node]['weight'] for node in fork2.tree.nodes()}
         pos2 = {k: (-y_positions2[k], pos2[k][0],) for k in pos2}
         node_labels2 = {node: str(fork2.tree.nodes[node]['weight']) for node in fork2.tree.nodes()}
-        node_colors2 = {'honest': 'green', 'a': 'red'}
+        node_colors2 = {'h': 'green', 'a': 'red'}
         node_colors2 = [node_colors2[fork2.tree.nodes[node]['type']] for node in fork2.tree.nodes()]
         nx.draw(fork2.tree, pos2, labels=node_labels2, with_labels=True, node_color=node_colors2, node_size=400, ax=ax2)
 
@@ -636,7 +636,7 @@ def tau_s_hcg(tau, s, w, forks=None, parallel=True):
             tine = tines[viableTinesIndexes[i]]
             label = int(get_label(tine[-1]))
             # honest vertices on tine at least s slots before the tine label
-            H = [h for h in tine if int(get_label(h)) + s <= label and fork.tree.nodes[h]['type'] == 'honest']
+            H = [h for h in tine if int(get_label(h)) + s <= label and fork.tree.nodes[h]['type'] == 'h']
             
             # the path in tine from label(v)+1 to label(t) contains at least tau*s  nodes
             for h in H:
@@ -669,7 +669,7 @@ def s_ecq(s, w, forks=None, parallel=True):
 
                 containsHonest = False
                 for node in path:
-                    if fork.tree.nodes[node]['type'] == 'honest':
+                    if fork.tree.nodes[node]['type'] == 'h':
                         containsHonest = True
                         break
                 if not containsHonest:
